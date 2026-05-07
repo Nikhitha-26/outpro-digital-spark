@@ -68,7 +68,7 @@ export function ContactForm() {
         message: form.message,
       };
 
-      const response = await fetch("api/contact", {
+      const response = await fetch("https://outpro-digital-spark.onrender.com/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
