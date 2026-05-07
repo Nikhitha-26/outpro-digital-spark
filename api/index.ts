@@ -20,4 +20,10 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ message: 'Outpro.India Backend is running smoothly!' });
 });
 
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log(`Outpro.India Backend is live and listening on port ${PORT}`);
+});
+
 export default app;
