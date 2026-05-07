@@ -1,28 +1,47 @@
 import { Request, Response } from 'express';
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Initialize Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const submitContactForm = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Extract the data sent from the React frontend
     const { fullName, email, companyName, serviceInterestedIn, budgetRange, message } = req.body;
 
-    // Validate that required fields are present
+    // 1. Validate data
     if (!fullName || !email || !message) {
       res.status(400).json({ error: 'Please provide all required fields.' });
       return;
     }
 
-    // For now, just log it to the VS Code terminal.
-    // LATER: We will replace this with MongoDB saving logic.
-    console.log('--- NEW CONTACT FORM SUBMISSION ---');
-    console.log(`Name: ${fullName}`);
-    console.log(`Email: ${email}`);
-    console.log(`Company: ${companyName || 'N/A'}`);
-    console.log(`Service: ${serviceInterestedIn}`);
-    console.log(`Budget: ${budgetRange}`);
-    console.log(`Message: ${message}`);
-    console.log('-----------------------------------');
+    // 2. Insert data into Supabase 'contacts' table
+    const { error } = await supabase
+      .from('contacts')
+      .insert([
+        {
+          full_name: fullName,
+          email: email,
+          company_name: companyName,
+          service: serviceInterestedIn,
+          budget: budgetRange,
+          message: message
+        }
+      ]);
 
-    // Send a success response back to the React frontend
+    // 3. Handle database errors
+    if (error) {
+      console.error('Supabase Error:', error.message);
+      res.status(500).json({ error: 'Failed to save your message. Please try again later.' });
+      return;
+    }
+
+    // 4. Send success response
+    console.log(`✅ New lead saved from: ${fullName}`);
     res.status(200).json({ 
       success: true, 
       message: 'Thank you! Your message has been received. We will contact you shortly.' 

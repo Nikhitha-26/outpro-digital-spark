@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner"; // IMPORT ADDED
 import { Card } from "@/components/common/Card";
 import { CTAButton } from "@/components/common/Button";
 
@@ -50,11 +51,44 @@ export function ContactForm() {
     return Object.keys(e).length === 0;
   };
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-    // Placeholder: integrate with CRM (HubSpot, Salesforce) or backend endpoint.
-    setSubmitted(true);
+  // UPDATED SUBMIT FUNCTION
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevents page reload
+
+    if (!validate()) return; // Stop if validation fails
+
+    try {
+      // Map frontend state to backend expected keys
+      const payload = {
+        fullName: form.name,
+        email: form.email,
+        companyName: form.company,
+        serviceInterestedIn: form.service,
+        budgetRange: form.budget,
+        message: form.message,
+      };
+
+      const response = await fetch("http://localhost:5000/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(result.message);
+        setForm(initial); // Clear the form
+        setSubmitted(true); // Show success UI
+      } else {
+        toast.error(result.error || "Something went wrong.");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error("Failed to connect to the server.");
+    }
   };
 
   if (submitted) {
